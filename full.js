@@ -3038,11 +3038,32 @@ const handleWindowsZoomInAlias = (event, input, webContents) => {
   webContents.setZoomLevel(webContents.getZoomLevel() + 1)
   return true
 }
+const handleWindowsZoomOutAlias = (event, input, webContents) => {
+  if (process.platform !== 'win32' || !input || input.type !== 'keyDown') {
+    return false
+  }
+  if (!input.control || input.alt || input.meta) {
+    return false
+  }
+  if (input.key !== '-' && input.key !== '_') {
+    return false
+  }
+  if (!webContents || webContents.isDestroyed()) {
+    return false
+  }
+  // Match the generated character so the alias works across keyboard layouts.
+  event.preventDefault()
+  webContents.setZoomLevel(webContents.getZoomLevel() - 1)
+  return true
+}
 const attach = (event, webContents) => {
   let wc = webContents
 
   webContents.on('before-input-event', (event, input) => {
-    handleWindowsZoomInAlias(event, input, webContents)
+    if (handleWindowsZoomInAlias(event, input, webContents)) {
+      return
+    }
+    handleWindowsZoomOutAlias(event, input, webContents)
   })
 
   if (ENABLE_BROWSER_CONSOLE_LOG && !attachedConsoleListeners.has(webContents)) {
